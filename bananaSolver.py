@@ -1,40 +1,40 @@
-def toFreq(strList: list[str]) -> dict[str, int]:
+def toFreq(elts: list[any]) -> dict[any, int]:
     """
-    Make a frequency dictionary corresponding to each element in strList
+    Make a frequency dictionary corresponding to each element in elts
 
-    @param (list[str]) strList: list (or other iterable) containing
-                                strings (repititions allowed)
-    @returns (dict[str,int]) for each key, it's value is how many times it appears in strList
+    @param (list[any]) elts: list (or other iterable type) containing elements (repitition allowed)
+    @returns (dict[any,int]) for each key, it's value is how many times it appears in elts
 
     Exemple:
     >>> toFreq("hellothere")
     {'h':2, 'e':3, 'l':2, 'o':1, 't':1, 'r':1}
     """
     frequencies = {}
-    for s in strList: 
-        if s not in frequencies:
-            frequencies[s] = 0
-        frequencies[s] += 1
+    for elt in elts: 
+        if elt not in frequencies:
+            frequencies[elt] = 0
+        frequencies[elt] += 1
     return frequencies
 
-def freqSousFreq(freq1: dict[str, int], freq2: dict[str, int]) -> bool:
+def isSubFreq(freq1: dict[any, int], freq2: dict[any, int]) -> bool:
     """
-    Verifie que tout les lettres de freq1 apparaissent max le meme
-    nombre de fois dans freq2 et minimum 1 fois (on peut pas avoir 
-    un lettre qui est dans freq1 et pas freq2)
+    Verify that each element in freq1 doesn't appear more times then it is present in freq2.
+    Could be interpreted as: freq1 <= freq2
+    NOTE: if there is an element in freq1 that is not in freq2, it returns False
 
-    @param (dict[str,int]) freq1, freq2: dictionnaire representant la frequence
-                                         de chaque caractere dans un liste
-    @returns (bool) True si pour tout caractere c de freq1, c dans freq2 et freq1[c] <= freq2[c]. 
-                    Sinon False
+    @param (dict[any,int]) freq1, freq2: dictionaries representing the frequency of a set of elements
+    @returns (bool) True if freq1 <= freq2, else False
     """
     
     # pour tout caractere c de freq 1, verifie qu'il est present dans freq 2
     # et que sa frequence dans freq1 ne depase pas celle de freq2
-    return all(c in freq2 and freq1[c] <= freq2[c] for c in freq1)
+
+    # for each element elt of freq1, verify that it is present in freq2
+    # and that is frequency in freq1 does not exceed it's frequency in freq2
+    return all(elt in freq2 and freq1[elt] <= freq2[elt] for elt in freq1)
 
 def addCol(grid: list[list[str]], left=False):
-    """Ajoute un colonne a gauche ou a droite de la grille"""
+    """Add a column of '.' to the left or right of the grid"""
     
     for row in grid:
         if left:
@@ -43,7 +43,8 @@ def addCol(grid: list[list[str]], left=False):
             row.append((".", ""))
 
 def addRow(grid: list[list[str]], top=False):
-    """Ajoute un ligne en haut ou en bas de la grille"""
+    """Add a row of '.' to the top or bottom of the grid"""
+
     nCols = len(grid[0])
     if top:
         grid.insert(0, [(".", "")]*nCols)
@@ -74,26 +75,26 @@ def calcGridPos(string: str, pos: tuple[int, int], vertical: bool = False) -> li
     return toPlace
 
 def placeWordFromPos(grid, allowedLetters, posList) -> bool:
-    """
-    Places characters on the grid in the positions returned by calcGridPos 
-    """
+    """Places characters on the grid in the positions returned by calcGridPos"""
+    #TODO: comment the new boolean that is returned here
     usableOnBoard = []
     lettersInWord = []
 
     for r,c,char,d in posList:
         # si la lettre n'est pas parmis les lettres dans notre main, et la case du grille est vide, on ne peut pas le poser
+        # if the letter of the word isn't among the letters in our hand AND it isn't already on the grid at this position, then we can't place the word
         if char not in allowedLetters and grid[r][c][0] == '.':
             return False
-        else: # si c'est un lettre qu'on peut utiliser
-            # si la case du grille a deja un lettre
+        else: # if it's a letter we can use
+            # if there is already a letter on this position
             if grid[r][c][0] != '.':
                 usableOnBoard.append(grid[r][c][0])
-            else: # sinon, place la lettre sur le grille
+            else: # else place the letter on the grid
                 grid[r][c] = (char,d)
             lettersInWord.append(char)
 
-    # verifie qu'on n'a pas placee plus de lettre que nous avons le droit
-    return freqSousFreq(toFreq(lettersInWord), toFreq(allowedLetters + usableOnBoard))
+    # verify that we haven't placed more letters then we are allowed to
+    return isSubFreq(toFreq(lettersInWord), toFreq(allowedLetters + usableOnBoard))
 
 def adjacentValid(wordlist: set[str], grid, pos, char, vertical: bool = False) -> bool:
     """
@@ -108,7 +109,7 @@ def adjacentValid(wordlist: set[str], grid, pos, char, vertical: bool = False) -
     @param grid: letters that are currently placed on the grid
     @param (tuple[int,int]) pos: position of letter to place
     @param (str) char: the character we want to place here
-    @param vertical: if we are looking on the vertical axis or not
+    @param (bool) vertical: if we are looking on the vertical axis or not
     
     @returns (bool) if it forms a valid word or not
     """
@@ -119,7 +120,7 @@ def adjacentValid(wordlist: set[str], grid, pos, char, vertical: bool = False) -
     r, c = pos
     if vertical:
         tempr = r
-        r -= 1 # car on met char au pos r
+        r -= 1 # because we've already placed char at tempr
         while (r >= 0 and grid[r][c][0] != "."):
             side1 = grid[r][c][0] + side1
             r -= 1
@@ -129,7 +130,7 @@ def adjacentValid(wordlist: set[str], grid, pos, char, vertical: bool = False) -
             r += 1
     else:
         tempc = c
-        c -= 1 # car on met char au pos c
+        c -= 1 # because we've already placed char at tempc
         while (c >= 0 and grid[r][c][0] != "."):
             side1 = grid[r][c][0] + side1
             c -= 1
@@ -137,6 +138,7 @@ def adjacentValid(wordlist: set[str], grid, pos, char, vertical: bool = False) -
         while (c < len(grid[0]) and grid[r][c][0] != "."):
             side2 = side2 + grid[r][c][0]
             c += 1
+
     # print(f"joined word: '{side1+side2}'")
     return (side1+side2) in wordlist
 
@@ -144,8 +146,9 @@ def allAdjacentValid(wordlist: set[str], grid, gridSize, posList) -> bool:
     """posList is the list of the same form as the one returned by calcGridPos"""
     gridR, gridC = gridSize
     r,c,char,direction = posList[0]
-    # on verifie deja que le mot qu'on pose ne fait pas un concatenation menant a un mot invalide
-    allValid = adjacentValid(wordlist, grid, (r,c), char, direction == 'v') #True
+    # we first check if the word we're about the place doesn't concatinate with another word, leading to an invalid word
+    allValid = adjacentValid(wordlist, grid, (r,c), char, direction == 'v')
+
     i = 0
     while allValid and i < len(posList):
         r,c,char,_ = posList[i]
@@ -154,10 +157,10 @@ def allAdjacentValid(wordlist: set[str], grid, gridSize, posList) -> bool:
         
         hasAdjVertical = gridC > c >= 0 and ((gridR >= r > 0 and grid[r-1][c][0] != '.') or (gridR-1 > r >= 0 and grid[r+1][c][0] != '.'))
         
-        if hasAdjHorizontal and direction == 'v':
+        if hasAdjHorizontal and direction == 'v': # check if the word on the horizontal axis is valid
             allValid = adjacentValid(wordlist, grid, (r,c), char, vertical=False)
 
-        if hasAdjVertical and direction == 'h':
+        if hasAdjVertical and direction == 'h': # check if the word on the vertical axis is valid
             allValid = adjacentValid(wordlist, grid, (r,c), char, vertical=True)
         
         i += 1
@@ -176,9 +179,9 @@ def intersectValid(grid, positions) -> bool:
           N O N E
     
     @param (list[list[tuple[char,char]]]) grid: the grid containing our characters
-    @param (list[tulpe[int,int,char,char]]) positions: list of position tuples of form (row, column, character, direction ['v', 'c'])
+    @param (list[tulpe[int,int,char,char]]) positions: list of position tuples of form (row, column, character, direction('v' or 'h'))
 
-    @returns (bool) wether the words can intersect and still be valid
+    @returns (bool) whether the word we wish to place can intersect with other words and still be valid
 
     Premis:
     For each position in `positions`, if there is a letter on one of those positions on the grid then make sure it is the same letter
@@ -186,7 +189,7 @@ def intersectValid(grid, positions) -> bool:
     """
 
     for r,c,char,_ in positions:
-        gridChar = grid[r][c][0] # char already on grid
+        gridChar = grid[r][c][0] # char that is already on grid
         # if the grid char is a letter and doesn't match the word position char
         if gridChar != '.' and gridChar != char:
             return False
@@ -195,21 +198,20 @@ def intersectValid(grid, positions) -> bool:
 
 
 def cleanGridScreen(lst: list[list[str]]) -> str:
-    """formate just un string representant la grille de tuples [[(char, direction),...],...]"""
+    """Just formats a string that represents our grid that is in the forme [[(char,direction),...],...]"""
     out = ""
-    for line in lst:
-        out += " ".join(map(lambda x: x[0], line)) + "\n"
+    for row in lst:
+        out += " ".join(map(lambda x: x[0], row)) + "\n"
     
     return out
 
 
-
-def rectifyBounds(grid, gridSize: tuple[int,int], positions) -> tuple[tuple[int,int], tuple[int,int]]:
+def rectifyBounds(grid, gridSize: tuple[int,int], positions: list[tuple[int,int,str,str]]) -> tuple[tuple[int,int], tuple[int,int]]:
     """
     Modifies the size of the grid depending on the positions of letters we would like to place on it.
 
     @param grid: the grid of letters
-    @param gridSize: the current size of the grid
+    @param (tuple[int,int]) gridSize: the current size of the grid
     @param positions: the positions we will use to determin if we must rectify anything
 
     @returns (tuple, tuple) of new gridSize AND new gridOffsets
@@ -219,7 +221,7 @@ def rectifyBounds(grid, gridSize: tuple[int,int], positions) -> tuple[tuple[int,
 
     nGridR, nGridC = gridSize
 
-    # on determine de combien de cases on depasse pour chaque cote
+    # we determin by how much the word goes out of bounds for each side of the grid
     topRow = abs(r1) if r1 < 0 else 0
     bottomRow = r2 - nGridR + 1 if r2 >= nGridR else 0
 
@@ -229,7 +231,7 @@ def rectifyBounds(grid, gridSize: tuple[int,int], positions) -> tuple[tuple[int,
     nGridC += rightCol + leftCol
     nGridR += topRow + bottomRow
 
-    # ajoute au cotes concerné, le nombre de colonnes ou lignes necessaires
+    # we add to the side in question the necessary amount of rows and columns
     if d == 'v':
         for _ in range(topRow):
             addRow(grid, top=True)
@@ -243,7 +245,7 @@ def rectifyBounds(grid, gridSize: tuple[int,int], positions) -> tuple[tuple[int,
         for _ in range(rightCol):
             addCol(grid)
 
-    # on change seulement le offset si on ajoute un ligne au debut, ou un colonne au debut
+    # the offset only changes if we add to the top or left of the grid. So we return those values (+ the new grid size)
     return (nGridR, nGridC), (topRow, leftCol)
 
 def bananaSolverRec(
@@ -257,13 +259,13 @@ def bananaSolverRec(
     """
     Finds a table of Banana Split where all of our given letters are used up in the game
 
-    @param wordlist: a list containing all words we can do with our current letters
-    @param offsets: the global offsets that we will apply to the coordinates in toTreat. 
-                   This is done because we might need to increase the grid's size
-    @param gridSize: contains the current number of rows and columns in the grid
+    @param (set[str]) wordlist: a set containing all valide words that we can form with our initial letters
+    @param (tuple[int, int]) offsets: the global offsets that we will apply to the coordinates in toTreat. 
+                    We have this because we might need to increase the grid's size
+    @param (tuple[int,int]) gridSize: contains the current number of rows and columns in the grid
     @param grid: the grid where we will place each letter of the game
-    @param toTreat: a list of all positions we must go over
-    @param letters: the list of letters that we must place on the grid
+    @param (list[tuple[int,int]]) toTreat: a list of all positions we must go over
+    @param (list[str]) letters: the list of letters that we must place on the grid
 
     @returns the first found result grid that uses up all letters. If not such grids are found, it returns an empty list []
     """
@@ -280,9 +282,9 @@ def bananaSolverRec(
         # all words that contain the character at (r,c) + the characters that the word could intersect with from (r,c)
         wordsAtPos = []
         for word in wordlist:
-            # pour pouvoir avoir des intersections entre plusieurs mot, il faut les lettres possibles d'intersections deja sur la grille
+            # to take into account intersecting words, we need some of the letters that are already on the grid
             templetters = letters.copy()
-            if d == 'v': # si le mot d'origine est vertical, on regarde sur l'horizontal ou on va placer
+            if d == 'v': # if the word we're placing on is vertical, we'll look on the horizontal axis (where we'll place our next word)
                 start = c+co - len(word)
                 end = c+co + len(word) - 1
                 if end >= gridSize[1]: end = gridSize[1]
@@ -296,7 +298,7 @@ def bananaSolverRec(
                 if start < 0: start = 0
                 for i in range(start, end):
                     templetters.append(grid[i][c+co][0])
-            if len(word) > 1 and posChar in word and freqSousFreq(toFreq(word), toFreq(templetters)):
+            if len(word) > 1 and posChar in word and isSubFreq(toFreq(word), toFreq(templetters)):
                 wordsAtPos.append(word)
 
 
@@ -319,7 +321,7 @@ def bananaSolverRec(
             alreadyOnGrid = []
             for nr, nc, _, _ in newPositions:
                 if copiedGrid[nr][nc][0] != '.':
-                    alreadyOnGrid.append((nr,nc))
+                    alreadyOnGrid.append( (nr, nc) )
 
             # check if it's a valid word that can be placed at this position
             icond = intersectValid(copiedGrid, newPositions)
@@ -336,7 +338,7 @@ def bananaSolverRec(
                 # update the toTreat for the next iteration
                 for nr, nc, nChar, _ in newPositions:
                     # remove the applied offsets from the positions, that way we can store the relative positions from offsets. 
-                    # Offsets are applied each call (because they change). We do this intead of applying them to all positions in toTreat at each call (it would be less efficient)
+                    # Offsets are applied within each recursive call (because they change). We do this intead of applying them to all positions in toTreat at each call (it would be less efficient)
                     origPos = (nr-ro-nro, nc-co-nco) 
                     if (nr,nc) not in alreadyOnGrid and origPos != (r,c):
                         copiedToTreat.append(origPos)
@@ -370,16 +372,17 @@ def toNormalCharMat(grid: list[list[tuple[str,str]]]):
 
 def bananaSolver(wordlist, letters: str) -> list[list[str]]:
     """
-    Fonction d'initiation du bananaSolver
+    Initiation function of the bananaSolver
     
     @param (iterable de str) wordlist: un objet iterable contennant tout les mots valides (notre dictionnaire)
-    @param (str) lettres: string contennat tout les lettres que nous pouvons utiliser
+    @param (str iterable) wordlist: an iterable object containing all valid words
+    @param (str) lettres: a string containing all letters that we can use
 
     @returns le tableau resultant d'un bananagram utilisant tout les lettres donnees
     """
-    lettersList = list(letters)
+    lettersList = list(letters.upper())
     lettersFreq = toFreq(lettersList)
-    startingWords = [word for word in wordlist if freqSousFreq(toFreq(word), lettersFreq)]
+    startingWords = [word.upper() for word in wordlist if isSubFreq(toFreq(word.upper()), lettersFreq)]
     # a copy here is not ideal. But the O(1) of the set inclusion is pretty good so...
     usableWords = set(startingWords)
 
